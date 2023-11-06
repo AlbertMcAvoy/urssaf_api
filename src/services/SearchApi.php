@@ -14,7 +14,7 @@ class SearchApi
         private HttpClientInterface $client
     ) {}
 
-    public function getCompanyFromName(string $name): ResponseInterface
+    public function getCompanyFromName(string $name): mixed
     {
         $response = $this->client->request('GET', "$this->SEARCH_API_URL?q=$name");
 
