@@ -10,7 +10,7 @@ class FileService {
         private Filesystem $filesystem = new Filesystem()
     ) {}
 
-    public function createAFileWithContent(string $filename, mixed $content) {
-        $this->filesystem->appendToFile("$filename", "$content;");
+    public function createAFileWithContent(string $filename, mixed $content): void {
+        $this->filesystem->dumpFile("data/$filename", $content);
     }
 }

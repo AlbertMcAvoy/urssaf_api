@@ -37,7 +37,7 @@
                 })
                 .then(data => {
                     // Traiter les données récupérées
-                    const companies = data.results;
+                    const companies = data;
                     const listCompany = document.getElementById('list-company');
                     listCompany.innerHTML = '';
                     const parser = new DOMParser();
@@ -48,7 +48,7 @@
 
                         let template =
                         `<div class='d-flex justify-content-between mb-2 mt-2'>
-                            ${company.nom_complet}
+                            ${company.nomRaisonSociale}
                             <a href="${urlCompany}" onclick="saveCompany(${company.siren})" class='btn btn-primary'> Consulter </a>
                         </div>`;
 

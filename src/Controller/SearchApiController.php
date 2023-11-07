@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Model\Company;
 use App\services\FileService;
 use App\services\SearchApi;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -21,8 +22,8 @@ class SearchApiController extends AbstractController
     #[Route('/{company_name}', name: 'get_company')]
     public function getCompanyFromName(string $company_name): Response
     {
-        $company = $this->searchApi->getCompanyFromInfo($company_name);
+        $companies = Company::toCompanies($this->searchApi->getCompanyFromInfo($company_name)->results);
 
-        return new JsonResponse($company);
+        return $this->json($companies);
     }
 }

@@ -10,19 +10,24 @@
                 SIREN : {{ company.siren }}
             </div>
             <div class='d-flex justify-content-between mb-2 mt-2'>
-                SIRET : {{ company.siege.siret }}
+                SIRET : {{ company.siret }}
             </div>
             <div class='d-flex justify-content-between mb-2 mt-2'>
-                Raison sociale : {{ company.nom_raison_sociale }}
+                Raison sociale : {{ company.nomRaisonSociale }}
             </div>
             <div class='d-flex justify-content-between mb-2 mt-2'>
-                Adresse : {{ company.siege.adresse }}
+                Adresse : {{ company.adresse }}
             </div>
         </div>
         <div>
-            <label for="salaire-brut">Salaire brut
-                <input type="number" id="salaire-brut"/>
-            </label>
+            <div class="form-floating mb-3">
+                <input type="text" class="form-control" id="salaire-brut" placeholder="4122">
+                <label for="salaire-brut">Salaire brut</label>
+            </div>
+        </div>
+        <div class="d-flex gap-3 mt-5">
+            <button onclick="handleSubmit()" class="btn btn-primary"> Calculer </button>
+            <a href="{{ path('index') }}" class="btn btn-outline-secondary"> Retour à l'accueil </a>
         </div>
     </section>
 
