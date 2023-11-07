@@ -3,19 +3,29 @@
 {% block title %}Hello HomeController!{% endblock %}
 
 {% block body %}
-    <label for="company">Company name
-        <input type="text" id="company"/>
-    </label>
-    <button type="button" onclick=handleSubmit()>Submit</button>
+
+
+    <section class="container d-flex flex-column align-items-center mt-3">
+        <section class="container d-flex flex-column align-items-center">
+            <div class="form-floating mb-3">
+                <input type="text" class="form-control" id="company" placeholder="Decalog">
+                <label for="company">Nom de l'entreprise</label>
+            </div>
+            <button type="button" onclick=handleSubmit() class="btn btn-success w-25">Rechercher</button>
+        </section>
+
+        <div class="d-flex flex-column w-50" id="list-company">
+
+        </div>
+    </section>
 
     <script>
-        function handleSubmit() {
+         const handleSubmit = () => {
             let company_name = document.getElementById('company').value
 
-            console.log(company_name)
-
-            let url = "{{ path("get_company", {"company_name" : "company_name"}) }}"
+            let url = "{{ path("search_get_company", {"company_name" : "company_name"}) }}"
             url = url.replace("company_name", company_name)
+
             fetch(url)
                 .then(response => {
                     // Gérer la réponse HTTP
@@ -26,8 +36,25 @@
                     return response.json(); // Vous pouvez également utiliser response.text(), response.blob(), etc.
                 })
                 .then(data => {
+                    console.log(data.results);
                     // Traiter les données récupérées
-                    console.log(data);
+                    const companies = data.results;
+                    const listCompany = document.getElementById('list-company');
+                    const parser = new DOMParser();
+
+                    companies.forEach(company => {
+                        let urlCompany = "{{ path("company_details", {"siren" : "company_siren"}) }}"
+                        urlCompany = urlCompany.replace("company_siren", company.siren)
+
+                        let template =
+                        `<div class='d-flex justify-content-between mb-2 mt-2'>
+                            ${company.nom_complet}
+                            <a href="${urlCompany}" class='btn btn-primary'> Selectionner </a>
+                        </div>`;
+
+                        const li = parser.parseFromString(template, 'text/html');
+                        listCompany.append(li.body.firstElementChild);
+                    });
                 })
                 .catch(error => {
                     // Gérer les erreurs potentielles

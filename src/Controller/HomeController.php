@@ -2,9 +2,7 @@
 
 namespace App\Controller;
 
-use App\services\SearchApi;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
@@ -12,21 +10,16 @@ use Symfony\Component\Routing\Annotation\Route;
 class HomeController extends AbstractController
 {
 
-    public function __construct(
-        private SearchApi $searchApi
-    ) {}
-
-    #[Route('/', name: 'app_home_index')]
+    #[Route('/', name: 'index')]
     public function index(): Response
     {
         return $this->render('home/index.html.twig');
     }
 
-
-    #[Route('/get_company/{company_name}', name: 'get_company')]
-    public function getCompany(string $company_name): Response
+    #[Route('/company/{siren}', name: 'company_details')]
+    public function companyDetails(string $siren): Response
     {
-        $company = $this->searchApi->getCompanyFromName($company_name);
 
-        return new JsonResponse($company);
-    }}
+        return $this->render('home/company_details.html.twig');
+    }
+}
