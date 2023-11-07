@@ -73,7 +73,7 @@ class ApiController extends AbstractController
 
         $this->fileService->createAFileWithContent("$siren.json", $jsonContent);
 
-        return $this->json($newCompany);
+        return $this->json($newCompany, 201);
     }
 
     #[Route('/companies/{siren}', name: 'get_company', methods: 'GET')]
