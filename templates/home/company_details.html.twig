@@ -4,6 +4,26 @@
 
 {% block body %}
 
-    Salut, ici c'est le détail d'une entreprise.
+    <section class="container d-flex flex-column align-items-center">
+        <div class="d-flex flex-column w-50" id="list-company">
+            <div class='d-flex justify-content-between mb-2 mt-2'>
+                SIREN : {{ company.siren }}
+            </div>
+            <div class='d-flex justify-content-between mb-2 mt-2'>
+                SIRET : {{ company.siege.siret }}
+            </div>
+            <div class='d-flex justify-content-between mb-2 mt-2'>
+                Raison sociale : {{ company.nom_raison_sociale }}
+            </div>
+            <div class='d-flex justify-content-between mb-2 mt-2'>
+                Adresse : {{ company.siege.adresse }}
+            </div>
+        </div>
+        <div>
+            <label for="salaire-brut">Salaire brut
+                <input type="number" id="salaire-brut"/>
+            </label>
+        </div>
+    </section>
 
 {% endblock %}
