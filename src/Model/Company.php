@@ -4,12 +4,10 @@ namespace App\Model;
 
 class Company {
 
-    public function __construct(
-        private string $siren,
-        private string $siret,
-        private string $nom_raison_sociale,
-        private string $adresse
-    ) {}
+    private string $siren;
+    private string $siret;
+    private string $nomRaisonSociale;
+    private string $adresse;
 
     public function getSiren(): string {
         return $this->siren;
@@ -30,11 +28,11 @@ class Company {
     }
 
     public function getNomRaisonSociale(): string {
-        return $this->nom_raison_sociale;
+        return $this->nomRaisonSociale;
     }
 
-    public function setNomRaisonSociale(string $nom_raison_sociale): Company {
-        $this->nom_raison_sociale = $nom_raison_sociale;
+    public function setNomRaisonSociale(string $nomRaisonSociale): Company {
+        $this->nomRaisonSociale = $nomRaisonSociale;
         return $this;
     }
 
@@ -48,23 +46,22 @@ class Company {
     }
 
     public static function toCompany(object $object): Company {
-        return new Company(
-            $object->siren,
-            $object->siege->siret,
-            $object->nom_raison_sociale,
-            $object->siege->adresse,
-        );
+
+        $company = new Company();
+        return $company->setSiren($object->siren)
+            ->setSiret(property_exists($object, 'siege') ? $object->siege->siret : $object->siret)
+            ->setNomRaisonSociale( property_exists($object, 'nom_raison_sociale') ? $object->nom_raison_sociale : $object->nomRaisonSociale)
+            ->setAdresse(property_exists($object, 'siege') ? $object->siege->adresse : $object->adresse);
     }
 
     public static function toCompanies(array $array): array {
         $companies = [];
         foreach ($array as $object) {
-            $companies[] = new Company(
-                $object->siren,
-                $object->siege->siret,
-                $object->nom_raison_sociale,
-                $object->siege->adresse,
-            );
+            $company = new Company();
+            $companies[] = $company->setSiren($object->siren)
+                ->setSiret(property_exists($object, 'siege') ? $object->siege->siret : $object->siret)
+                ->setNomRaisonSociale( property_exists($object, 'nom_raison_sociale') ? $object->nom_raison_sociale : $object->nomRaisonSociale)
+                ->setAdresse(property_exists($object, 'siege') ? $object->siege->adresse : $object->adresse);
         }
 
         return $companies;

@@ -33,5 +33,4 @@ class CompanyController extends AbstractController
 
         return $this->render('home/company_details.html.twig', ["company" => $company]);
     }
-
 }

@@ -23,7 +23,7 @@
          const handleSubmit = () => {
             let company_name = document.getElementById('company').value
 
-            let url = "{{ path("search_get_company", {"company_name" : "company_name"}) }}"
+            let url = "{{ path("api_search_company", {"company_name" : "company_name"}) }}"
             url = url.replace("company_name", company_name)
 
             fetch(url)
