@@ -12,9 +12,9 @@ class SearchApi {
         private HttpClientInterface $client
     ) {}
 
-    public function getCompanyFromName(string $name): mixed
+    public function getCompanyFromInfo(string $info): mixed
     {
-        $response = $this->client->request('GET', "$this->SEARCH_API_URL?q=$name");
+        $response = $this->client->request('GET', "$this->SEARCH_API_URL?q=$info");
 
         return json_decode($response->getContent());
     }

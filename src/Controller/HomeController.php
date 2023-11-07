@@ -15,11 +15,4 @@ class HomeController extends AbstractController
     {
         return $this->render('home/index.html.twig');
     }
-
-    #[Route('/company/{siren}', name: 'company_details')]
-    public function companyDetails(string $siren): Response
-    {
-
-        return $this->render('home/company_details.html.twig');
-    }
 }
