@@ -20,7 +20,7 @@ class SearchApiController extends AbstractController
     #[Route('/{company_name}', name: 'get_company')]
     public function getCompanyFromName(string $company_name): Response
     {
-        $company = $this->searchApi->getCompanyFromName($company_name);
+        $company = $this->searchApi->getCompanyFromInfo($company_name);
 
         return new JsonResponse($company);
     }
