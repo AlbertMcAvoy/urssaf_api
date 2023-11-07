@@ -2,11 +2,20 @@
 
 namespace App\Model;
 
+use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Validator\Constraints as Assert;
+
 class Company {
 
+    #[Assert\NotBlank]
     private string $siren;
-    private string $siret;
-    private string $nomRaisonSociale;
+
+    private string $siret = "";
+
+    #[Assert\NotBlank]
+    private string $nom_raison_sociale;
+
+    #[Assert\NotBlank]
     private string $adresse;
 
     public function getSiren(): string {
@@ -28,11 +37,11 @@ class Company {
     }
 
     public function getNomRaisonSociale(): string {
-        return $this->nomRaisonSociale;
+        return $this->nom_raison_sociale;
     }
 
     public function setNomRaisonSociale(string $nomRaisonSociale): Company {
-        $this->nomRaisonSociale = $nomRaisonSociale;
+        $this->nom_raison_sociale = $nomRaisonSociale;
         return $this;
     }
 
