@@ -33,13 +33,13 @@
                         throw new Error('Erreur de réseau ou de serveur');
                     }
                     // Transformer la réponse en un format souhaité (par exemple, JSON)
-                    return response.json(); // Vous pouvez également utiliser response.text(), response.blob(), etc.
+                    return response.json();
                 })
                 .then(data => {
-                    console.log(data.results);
                     // Traiter les données récupérées
                     const companies = data.results;
                     const listCompany = document.getElementById('list-company');
+                    listCompany.innerHTML = '';
                     const parser = new DOMParser();
 
                     companies.forEach(company => {
@@ -49,7 +49,7 @@
                         let template =
                         `<div class='d-flex justify-content-between mb-2 mt-2'>
                             ${company.nom_complet}
-                            <a href="${urlCompany}" class='btn btn-primary'> Selectionner </a>
+                            <a href="${urlCompany}" onclick="saveCompany(${company.siren})" class='btn btn-primary'> Consulter </a>
                         </div>`;
 
                         const li = parser.parseFromString(template, 'text/html');
@@ -61,7 +61,6 @@
                     console.error('Une erreur s\'est produite : ', error);
                 });
         }
-
 
     </script>
 {% endblock %}

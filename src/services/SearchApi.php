@@ -3,10 +3,8 @@
 namespace App\services;
 
 use Symfony\Contracts\HttpClient\HttpClientInterface;
-use Symfony\Contracts\HttpClient\ResponseInterface;
 
-class SearchApi
-{
+class SearchApi {
 
      private string $SEARCH_API_URL = 'https://recherche-entreprises.api.gouv.fr/search';
 

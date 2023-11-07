@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\services\FileService;
 use App\services\SearchApi;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
