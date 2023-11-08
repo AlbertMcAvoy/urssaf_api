@@ -11,9 +11,19 @@ class FileService {
         private Filesystem $filesystem = new Filesystem(),
     ) {}
 
-    public function createAFileWithContent(string $filename, mixed $content): void {
+    public function createFileWithContent(string $filename, mixed $content): Finder {
         $this->filesystem->dumpFile("data/$filename", $content);
+        return $this->readFiles($filename);
     }
+
+    public function updateFileWithContent(string $filename, mixed $content): Finder {
+        $this->filesystem->dumpFile("data/$filename", $content);
+        return $this->readFiles($filename);
+    }
+    public function deleteFile(string $filename): void {
+        $this->filesystem->remove("data/$filename");
+    }
+
 
     public function readFiles(string $regexFileName): Finder {
         $finder = new Finder();

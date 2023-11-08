@@ -48,9 +48,9 @@ class ApiController extends AbstractController
     public function getCompanies(Request $request): Response {
 
         $contentType = $request->headers->get('Content-type');
-        if (!$this->formatAllowed($contentType)) throw new NotAcceptableHttpException('Le format n\'est pas autorisé');
+        $this->verifyFormatAllowed($contentType);
 
-        $fileCompanies =  $this->fileService->readfiles('*.json');
+        $fileCompanies =  $this->fileService->readFiles('*.json');
 
         $companies = $this->getCompaniesInformations($fileCompanies, $contentType);
 
@@ -61,7 +61,7 @@ class ApiController extends AbstractController
     public function createCompanies(Request $request): Response {
 
         $contentType = $request->headers->get('Content-type');
-        if (!$this->formatAllowed($contentType)) throw new NotAcceptableHttpException('Le format n\'est pas autorisé');
+        $this->verifyFormatAllowed($contentType);
 
         $newCompany = $request->getContent();
         $newCompany = $this->serializer->deserialize($newCompany, Company::class, 'json');
@@ -69,7 +69,7 @@ class ApiController extends AbstractController
 
         $jsonContent = $this->serializer->serialize($newCompany, 'json');
         $siren = $newCompany->getSiren();
-        $files = $this->fileService->readfiles("$siren.json");
+        $files = $this->fileService->readFiles("$siren.json");
 
         if ($files->hasResults()) {
             throw new ConflictHttpException('L\'entreprise existe déjà');
@@ -84,9 +84,9 @@ class ApiController extends AbstractController
     public function getCompany(Request $request, string $siren): Response {
 
         $contentType = $request->headers->get('Content-type');
-        if (!$this->formatAllowed($contentType)) throw new NotAcceptableHttpException('Le format n\'est pas autorisé');
+        $this->verifyFormatAllowed($contentType);
 
-        $files = $this->fileService->readfiles("$siren.json");
+        $files = $this->fileService->readFiles("$siren.json");
         if (!$files->hasResults()) {
             throw new NotFoundHttpException('Aucune entreprise n\'a trouvée');
         }
@@ -98,13 +98,12 @@ class ApiController extends AbstractController
 
     #[Route('/companies/{siren}', name: 'update_company', methods: 'PATCH')]
     public function updatePartialCompany(Request $request, string $siren): Response {
-        $authentication = $request->headers->get('Authorization');
-        $this->verifyAuthentication($authentication);
+        $this->verifyAuthentication($request);
 
         $contentType = $request->headers->get('Content-type');
-        if (!$this->formatAllowed($contentType)) throw new NotAcceptableHttpException('Le format n\'est pas autorisé');
+        $this->verifyFormatAllowed($contentType);
 
-        $files = $this->fileService->readfiles("$siren.json");
+        $files = $this->fileService->readFiles("$siren.json");
         if (!$files->hasResults()) {
             throw new NotFoundHttpException('Aucune entreprise n\'a trouvée');
         }
@@ -113,6 +112,24 @@ class ApiController extends AbstractController
         $object = json_decode($request->getContent());
 
         $this->updateCompany($siren, $company, $object);
+
+        return $this->json($company);
+    }
+
+    #[Route('/companies/{siren}', name: 'delete_company', methods: 'DELETE')]
+    public function deleteCompany(Request $request, string $siren): Response {
+        $this->verifyAuthentication($request);
+
+        $contentType = $request->headers->get('Content-type');
+        $this->verifyFormatAllowed($contentType);
+
+        $files = $this->fileService->readFiles("$siren.json");
+        if (!$files->hasResults()) {
+            throw new NotFoundHttpException('Aucune entreprise n\'a trouvée');
+        }
+
+        $company = $this->getCompaniesInformations($files, $contentType)[0];
+        $this->fileService->deleteFile("$siren.json");
 
         return $this->json($company);
     }
@@ -159,12 +176,12 @@ class ApiController extends AbstractController
         }
     }
 
-    private function verifyAuthentication(?string $authentication): void {
+    private function verifyAuthentication(?Request $request): void {
         $adminLogin = $this->getParameter('ADMIN_LOGIN');
         $adminPassword = $this->getParameter('ADMIN_PASSWORD');
         $token = base64_encode("$adminLogin:$adminPassword");
 
-        $userToken = explode(' ', $authentication);
+        $userToken = explode(' ', $request->headers->get('Authorization'));
 
 
         if ($userToken[0] != 'basic' || $userToken[1] != $token) {
@@ -172,9 +189,11 @@ class ApiController extends AbstractController
         }
     }
 
-    private function formatAllowed(?string $contentType): bool {
+    private function verifyFormatAllowed(?string $contentType): void {
 
-        return in_array($contentType, $this->ALLOWED_FORMAT);
+        if (! in_array($contentType, $this->ALLOWED_FORMAT)) {
+            throw new NotAcceptableHttpException('Le format n\'est pas autorisé');
+        }
     }
 
     private function updateCompany(string $siren, Company $company, mixed $object) {
