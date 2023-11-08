@@ -27,13 +27,15 @@
             url = url.replace("company_name", company_name)
 
             fetch(url)
+                .then(r => r.json())
                 .then(response => {
                     // Gérer la réponse HTTP
-                    if (!response.ok) {
-                        throw new Error('Erreur de réseau ou de serveur');
+                    if (response.status !== 200) {
+                        alert(response.content);
+                        throw new Error(response.content);
                     }
-                    // Transformer la réponse en un format souhaité (par exemple, JSON)
-                    return response.json();
+
+                    return response.content;
                 })
                 .then(data => {
                     // Traiter les données récupérées

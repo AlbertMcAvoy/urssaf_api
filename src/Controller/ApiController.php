@@ -39,99 +39,142 @@ class ApiController extends AbstractController
     #[Route('/search/{company_name}', name: 'search_company')]
     public function getCompanyFromName(string $company_name): JsonResponse
     {
-        $companies = Company::toCompanies($this->searchApi->getCompanyFromInfo($company_name)->results);
+        try {
+            $companies = Company::toCompanies($this->searchApi->getCompanyFromInfo($company_name)->results);
+        } catch (\Exception $e) {
+            return $this->handleException($e);
+        }
 
-        return $this->json($companies);
+        return $this->json([
+            'status' => 200,
+            'content' => $companies
+        ]);
     }
 
     #[Route('/companies', name: 'get_companies', methods: 'GET')]
     public function getCompanies(Request $request): Response {
 
-        $contentType = $request->headers->get('Content-type');
-        $this->verifyFormatAllowed($contentType);
+        try {
+            $contentType = $request->headers->get('Content-type');
+            $this->verifyFormatAllowed($contentType);
 
-        $fileCompanies =  $this->fileService->readFiles('*.json');
+            $fileCompanies =  $this->fileService->readFiles('*.json');
 
-        $companies = $this->getCompaniesInformations($fileCompanies, $contentType);
+            $companies = $this->getCompaniesInformations($fileCompanies, $contentType);
+        } catch (\Exception $e) {
+            return $this->handleException($e);
+        }
 
-        return $this->json($companies);
+        return $this->json([
+            'status' => 200,
+            'content' => $companies
+        ]);
     }
 
     #[Route('/companies', name: 'create_companies', methods: 'POST')]
     public function createCompanies(Request $request): Response {
 
-        $contentType = $request->headers->get('Content-type');
-        $this->verifyFormatAllowed($contentType);
+        try {
+            $contentType = $request->headers->get('Content-type');
+            $this->verifyFormatAllowed($contentType);
 
-        $newCompany = $request->getContent();
-        $newCompany = $this->serializer->deserialize($newCompany, Company::class, 'json');
-        $this->verifyForm($newCompany);
+            $newCompany = $request->getContent();
+            $newCompany = $this->serializer->deserialize($newCompany, Company::class, 'json');
+            $this->verifyForm($newCompany);
 
-        $jsonContent = $this->serializer->serialize($newCompany, 'json');
-        $siren = $newCompany->getSiren();
-        $files = $this->fileService->readFiles("$siren.json");
+            $jsonContent = $this->serializer->serialize($newCompany, 'json');
+            $siren = $newCompany->getSiren();
+            $files = $this->fileService->readFiles("$siren.json");
 
-        if ($files->hasResults()) {
-            throw new ConflictHttpException('L\'entreprise existe déjà');
+            if ($files->hasResults()) {
+                throw new ConflictHttpException('L\'entreprise existe déjà');
+            }
+
+            $newFiles = $this->fileService->createFileWithContent("$siren.json", $jsonContent);
+            $company = $this->getCompaniesInformations($newFiles, $contentType)[0];
+        } catch (\Exception $e) {
+            return $this->handleException($e);
         }
 
-        $newFiles = $this->fileService->createFileWithContent("$siren.json", $jsonContent);
-        $company = $this->getCompaniesInformations($newFiles, $contentType)[0];
-        return $this->json($company, 201);
+        return $this->json([
+            'status' => 201,
+            'content' => $company
+        ], 201);
     }
 
     #[Route('/companies/{siren}', name: 'get_company', methods: 'GET')]
     public function getCompany(Request $request, string $siren): Response {
 
-        $contentType = $request->headers->get('Content-type');
-        $this->verifyFormatAllowed($contentType);
+        try {
+            $contentType = $request->headers->get('Content-type');
+            $this->verifyFormatAllowed($contentType);
 
-        $files = $this->fileService->readFiles("$siren.json");
-        if (!$files->hasResults()) {
-            throw new NotFoundHttpException('Aucune entreprise n\'a trouvée');
+            $files = $this->fileService->readFiles("$siren.json");
+            if (!$files->hasResults()) {
+                throw new NotFoundHttpException('Aucune entreprise n\'a trouvée');
+            }
+
+            $company = $this->getCompaniesInformations($files, $contentType)[0];
+        } catch (\Exception $e) {
+            return $this->handleException($e);
         }
 
-        $company = $this->getCompaniesInformations($files, $contentType)[0];
-
-        return $this->json($company);
+        return $this->json([
+            'status' => 200,
+            'content' => $company
+        ]);
     }
 
     #[Route('/companies/{siren}', name: 'update_company', methods: 'PATCH')]
     public function updatePartialCompany(Request $request, string $siren): Response {
-        $this->verifyAuthentication($request);
+        try {
+            $this->verifyAuthentication($request);
 
-        $contentType = $request->headers->get('Content-type');
-        $this->verifyFormatAllowed($contentType);
+            $contentType = $request->headers->get('Content-type');
+            $this->verifyFormatAllowed($contentType);
 
-        $files = $this->fileService->readFiles("$siren.json");
-        if (!$files->hasResults()) {
-            throw new NotFoundHttpException('Aucune entreprise n\'a trouvée');
+            $files = $this->fileService->readFiles("$siren.json");
+            if (!$files->hasResults()) {
+                throw new NotFoundHttpException('Aucune entreprise n\'a trouvée');
+            }
+
+            $company = $this->getCompaniesInformations($files, 'application/json')[0];
+            $object = json_decode($request->getContent());
+
+            $this->updateCompany($siren, $company, $object);
+        } catch (\Exception $e) {
+            return $this->handleException($e);
         }
 
-        $company = $this->getCompaniesInformations($files, 'application/json')[0];
-        $object = json_decode($request->getContent());
-
-        $this->updateCompany($siren, $company, $object);
-
-        return $this->json($this->getCompaniesInformations($files, $contentType)[0]);
+        return $this->json([
+            'status' => 200,
+            'content' => $this->getCompaniesInformations($files, $contentType)[0]
+        ]);
     }
 
     #[Route('/companies/{siren}', name: 'delete_company', methods: 'DELETE')]
     public function deleteCompany(Request $request, string $siren): Response {
-        $this->verifyAuthentication($request);
+        try {
+            $this->verifyAuthentication($request);
 
-        $contentType = $request->headers->get('Content-type');
-        $this->verifyFormatAllowed($contentType);
+            $contentType = $request->headers->get('Content-type');
+            $this->verifyFormatAllowed($contentType);
 
-        $files = $this->fileService->readFiles("$siren.json");
-        if (!$files->hasResults()) {
-            throw new NotFoundHttpException('Aucune entreprise n\'a trouvée');
+            $files = $this->fileService->readFiles("$siren.json");
+            if (!$files->hasResults()) {
+                throw new NotFoundHttpException('Aucune entreprise n\'a trouvée');
+            }
+
+            $company = $this->getCompaniesInformations($files, $contentType)[0];
+            $this->fileService->deleteFile("$siren.json");
+        } catch (\Exception $e) {
+            return $this->handleException($e);
         }
 
-        $company = $this->getCompaniesInformations($files, $contentType)[0];
-        $this->fileService->deleteFile("$siren.json");
-
-        return $this->json($company);
+        return $this->json([
+            'status' => 200,
+            'content' => $company
+        ]);
     }
 
     /**
@@ -217,5 +260,12 @@ class ApiController extends AbstractController
 
         $jsonContent = $this->serializer->serialize($company, 'json');
         $this->fileService->updateFileWithContent("$siren.json", $jsonContent);
+    }
+
+    private function handleException(\Exception $e): JsonResponse {
+        return $this->json([
+            'status' => $e->getStatusCode(),
+            'content' => $e->getMessage()
+        ], $e->getStatusCode());
     }
 }
