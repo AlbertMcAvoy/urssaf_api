@@ -27,7 +27,7 @@ class CompanyController extends AbstractController
 
         $jsonContent = $this->serializer->serialize($company, 'json');
 
-        $this->fileService->createAFileWithContent("$siren.json", $jsonContent);
+        $this->fileService->createFileWithContent("$siren.json", $jsonContent);
 
         return $this->render('home/company_details.html.twig', ["company" => $company]);
     }

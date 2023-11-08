@@ -24,6 +24,6 @@ class LoginController extends AbstractController {
 
         $token = base64_encode("$adminLogin:$adminPassword");
 
-        return $this->json($token);
+        return $this->json(['token' => $token]);
     }
 }

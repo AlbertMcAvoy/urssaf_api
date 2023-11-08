@@ -14,6 +14,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\NotAcceptableHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
@@ -47,7 +48,6 @@ class ApiController extends AbstractController
     public function getCompanies(Request $request): Response {
 
         $contentType = $request->headers->get('Content-type');
-
         if (!$this->formatAllowed($contentType)) throw new NotAcceptableHttpException('Le format n\'est pas autorisé');
 
         $fileCompanies =  $this->fileService->readfiles('*.json');
@@ -60,9 +60,13 @@ class ApiController extends AbstractController
     #[Route('/companies', name: 'create_companies', methods: 'POST')]
     public function createCompanies(Request $request): Response {
 
+        $contentType = $request->headers->get('Content-type');
+        if (!$this->formatAllowed($contentType)) throw new NotAcceptableHttpException('Le format n\'est pas autorisé');
+
         $newCompany = $request->getContent();
         $newCompany = $this->serializer->deserialize($newCompany, Company::class, 'json');
         $this->verifyForm($newCompany);
+
         $jsonContent = $this->serializer->serialize($newCompany, 'json');
         $siren = $newCompany->getSiren();
         $files = $this->fileService->readfiles("$siren.json");
@@ -71,25 +75,44 @@ class ApiController extends AbstractController
             throw new ConflictHttpException('L\'entreprise existe déjà');
         }
 
-        $this->fileService->createAFileWithContent("$siren.json", $jsonContent);
-
-        return $this->json($newCompany, 201);
+        $newFiles = $this->fileService->createFileWithContent("$siren.json", $jsonContent);
+        $company = $this->getCompaniesInformations($newFiles, $contentType)[0];
+        return $this->json($company, 201);
     }
 
     #[Route('/companies/{siren}', name: 'get_company', methods: 'GET')]
     public function getCompany(Request $request, string $siren): Response {
 
         $contentType = $request->headers->get('Content-type');
-
         if (!$this->formatAllowed($contentType)) throw new NotAcceptableHttpException('Le format n\'est pas autorisé');
 
         $files = $this->fileService->readfiles("$siren.json");
-
         if (!$files->hasResults()) {
             throw new NotFoundHttpException('Aucune entreprise n\'a trouvée');
         }
 
         $company = $this->getCompaniesInformations($files, $contentType)[0];
+
+        return $this->json($company);
+    }
+
+    #[Route('/companies/{siren}', name: 'update_company', methods: 'PATCH')]
+    public function updatePartialCompany(Request $request, string $siren): Response {
+        $authentication = $request->headers->get('Authorization');
+        $this->verifyAuthentication($authentication);
+
+        $contentType = $request->headers->get('Content-type');
+        if (!$this->formatAllowed($contentType)) throw new NotAcceptableHttpException('Le format n\'est pas autorisé');
+
+        $files = $this->fileService->readfiles("$siren.json");
+        if (!$files->hasResults()) {
+            throw new NotFoundHttpException('Aucune entreprise n\'a trouvée');
+        }
+
+        $company = $this->getCompaniesInformations($files, 'application/json')[0];
+        $object = json_decode($request->getContent());
+
+        $this->updateCompany($siren, $company, $object);
 
         return $this->json($company);
     }
@@ -136,8 +159,44 @@ class ApiController extends AbstractController
         }
     }
 
+    private function verifyAuthentication(?string $authentication): void {
+        $adminLogin = $this->getParameter('ADMIN_LOGIN');
+        $adminPassword = $this->getParameter('ADMIN_PASSWORD');
+        $token = base64_encode("$adminLogin:$adminPassword");
+
+        $userToken = explode(' ', $authentication);
+
+
+        if ($userToken[0] != 'basic' || $userToken[1] != $token) {
+            throw new UnauthorizedHttpException('Basic', 'Identifiants incorrects');
+        }
+    }
+
     private function formatAllowed(?string $contentType): bool {
 
         return in_array($contentType, $this->ALLOWED_FORMAT);
+    }
+
+    private function updateCompany(string $siren, Company $company, mixed $object) {
+
+        $invalid = true;
+
+        if (property_exists($object, 'nom_raison_sociale')) {
+            $company->setNomRaisonSociale($object->nom_raison_sociale);
+            $invalid = false;
+        }
+        if (property_exists($object, 'adresse')) {
+            $company->setAdresse($object->adresse);
+            $invalid = false;
+        }
+        if (property_exists($object, 'siret')) {
+            $company->setSiret($object->siret);
+            $invalid = false;
+        }
+
+        if ($invalid) throw new BadRequestException('Format invalide');
+
+        $jsonContent = $this->serializer->serialize($company, 'json');
+        $this->fileService->updateFileWithContent("$siren.json", $jsonContent);
     }
 }
