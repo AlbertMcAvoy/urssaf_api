@@ -23,7 +23,7 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 class ApiController extends AbstractController
 {
 
-    private array $allowedFormat = [
+    private array $ALLOWED_FORMAT = [
         'application/json',
         'application/csv'
     ];
@@ -105,23 +105,13 @@ class ApiController extends AbstractController
 
         foreach ($fileCompanies as $file) {
             $object = json_decode($file->getContents());
-            switch($contentType) {
-                case 'application/csv':
-                    $companies[] = $this->serializer->serialize($object, 'csv', ['csv_delimiter' => ';']);
-                    break;
-                case 'application/json':
-                default:
-                    $companies[] = Company::toCompany($object);
-                    break;
-            }
+            $companies[] = match ($contentType) {
+                'application/csv' => $this->serializer->serialize($object, 'csv', ['csv_delimiter' => ';']),
+                default => Company::toCompany($object),
+            };
         }
 
         return $companies;
-    }
-
-    private function formatAllowed(?string $contentType): bool {
-
-        return in_array($contentType, $this->allowedFormat);
     }
 
     /**
@@ -144,5 +134,10 @@ class ApiController extends AbstractController
 
             throw new BadRequestException($errorsString);
         }
+    }
+
+    private function formatAllowed(?string $contentType): bool {
+
+        return in_array($contentType, $this->ALLOWED_FORMAT);
     }
 }
