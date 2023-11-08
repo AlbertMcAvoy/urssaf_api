@@ -113,7 +113,7 @@ class ApiController extends AbstractController
 
         $this->updateCompany($siren, $company, $object);
 
-        return $this->json($company);
+        return $this->json($this->getCompaniesInformations($files, $contentType)[0]);
     }
 
     #[Route('/companies/{siren}', name: 'delete_company', methods: 'DELETE')]
