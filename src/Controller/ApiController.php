@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Model\Company;
 use App\services\FileService;
 use App\services\SearchApi;
+use App\services\UrssafApi;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\HttpFoundation\Exception\BadRequestException;
@@ -30,10 +31,11 @@ class ApiController extends AbstractController
     ];
 
     public function __construct(
-        private SearchApi $searchApi,
-        private FileService $fileService,
+        private SearchApi           $searchApi,
+        private UrssafApi           $urssafApi,
+        private FileService         $fileService,
         private SerializerInterface $serializer,
-        private ValidatorInterface $validator
+        private ValidatorInterface  $validator
     ) {}
 
     #[Route('/search/{company_name}', name: 'search_company')]
@@ -174,6 +176,21 @@ class ApiController extends AbstractController
         return $this->json([
             'status' => 200,
             'content' => $company
+        ]);
+    }
+
+    #[Route('/evaluate-salary/{salary}', name: 'evaluate_salary', methods: 'POST')]
+    public function evaluateSalary(Request $request, int $salary): JsonResponse
+    {
+        try {
+            $result = $this->urssafApi->evaluateSalary($salary);
+        } catch (\Exception $e) {
+            return $this->handleException($e);
+        }
+
+        return $this->json([
+            'status' => 200,
+            'content' => $result,
         ]);
     }
 

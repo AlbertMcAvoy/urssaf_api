@@ -1,6 +1,6 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Hello HomeController!{% endblock %}
+{% block title %}Details de l'entreprise{% endblock %}
 
 {% block body %}
 
@@ -26,9 +26,60 @@
             </div>
         </div>
         <div class="d-flex gap-3 mt-5">
-            <button onclick="handleSubmit()" class="btn btn-primary"> Calculer </button>
+            <button onclick="handleSalaryCalculation()" class="btn btn-primary"> Calculer Salaire </button>
             <a href="{{ path('index') }}" class="btn btn-outline-secondary"> Retour à l'accueil </a>
         </div>
+        <div id="result-container"></div>
+
     </section>
+
+    <script>
+        const handleSalaryCalculation = () => {
+            const salaryInput = document.getElementById('salaire-brut');
+            const salary = parseInt(salaryInput.value);
+
+            let url = "{{ path('api_evaluate_salary', {'salary' : '0'}) }}";
+            url = url.replace('0', salary);
+
+            fetch(url, {
+                method: 'POST',
+            })
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data.content);
+
+                    // Traiter les données du calcul de salaire
+                    displayResults(data);
+                })
+                .catch(error => {
+                    // Gérer les erreurs potentielles
+                    console.error('Une erreur s\'est produite lors du calcul du salaire : ', error);
+                });
+        };
+
+        const displayResults = (data) => {
+            // Créer un tableau HTML
+            const table = document.createElement('table');
+            table.classList.add('table');
+
+
+            // Ajouter une ligne pour chaque résultat
+            data.content.evaluate.forEach(result => {
+                const row = table.insertRow();
+                const cell1 = row.insertCell(0);
+                const cell2 = row.insertCell(1);
+
+                // Afficher les informations dans les cellules
+                cell1.textContent = result.nodeValue.toFixed(2) + ' ' + result.unit.numerators[0] + ' / ' + result.unit.denominators[0];
+                cell2.textContent = result.traversedVariables[0]; // Mettez ici le nom approprié de la variable
+            });
+
+            // Ajouter le tableau à la page
+            const resultContainer = document.getElementById('result-container');
+            resultContainer.innerHTML = ''; // Effacer le contenu précédent
+            resultContainer.appendChild(table);
+        };
+
+    </script>
 
 {% endblock %}
