@@ -26,7 +26,7 @@
             </div>
         </div>
         <div class="d-flex gap-3 mt-5">
-            <button onclick="handleSalaryCalculation()" class="btn btn-primary"> Calculer Salaire </button>
+            <button onclick="handleSalaryCalculation()" class="btn btn-primary">Calculer Salaire</button>
             <a href="{{ path('index') }}" class="btn btn-outline-secondary"> Retour à l'accueil </a>
         </div>
         <div id="result-container"></div>
@@ -46,38 +46,47 @@
             })
                 .then(response => response.json())
                 .then(data => {
-                    console.log(data.content);
-
-                    // Traiter les données du calcul de salaire
                     displayResults(data);
                 })
                 .catch(error => {
-                    // Gérer les erreurs potentielles
-                    console.error('Une erreur s\'est produite lors du calcul du salaire : ', error);
+                    console.error('Une erreur s\'est produite lors des calculs : ', error);
                 });
         };
 
         const displayResults = (data) => {
-            // Créer un tableau HTML
-            const table = document.createElement('table');
-            table.classList.add('table');
-
-
-            // Ajouter une ligne pour chaque résultat
-            data.content.evaluate.forEach(result => {
-                const row = table.insertRow();
-                const cell1 = row.insertCell(0);
-                const cell2 = row.insertCell(1);
-
-                // Afficher les informations dans les cellules
-                cell1.textContent = result.nodeValue.toFixed(2) + ' ' + result.unit.numerators[0] + ' / ' + result.unit.denominators[0];
-                cell2.textContent = result.traversedVariables[0]; // Mettez ici le nom approprié de la variable
-            });
-
-            // Ajouter le tableau à la page
             const resultContainer = document.getElementById('result-container');
-            resultContainer.innerHTML = ''; // Effacer le contenu précédent
-            resultContainer.appendChild(table);
+            resultContainer.innerHTML = '';
+
+            data.content.forEach(contractData => {
+                const contractDiv = document.createElement('div');
+                contractDiv.classList.add('mt-4');
+
+                const contractHeader = document.createElement('h4');
+                contractHeader.textContent = `Contrat: ${contractData.contract}`;
+                contractDiv.appendChild(contractHeader);
+
+                const table = document.createElement('table');
+                table.classList.add('table');
+
+                if (contractData.data.evaluate) {
+                    contractData.data.evaluate.forEach(result => {
+                        const row = table.insertRow();
+                        const cell1 = row.insertCell(0);
+                        const cell2 = row.insertCell(1);
+
+                        cell1.textContent = result.nodeValue !== null ? result.nodeValue.toFixed(2) + ' ' + result.unit.numerators[0] + ' / ' + result.unit.denominators[0] : 'N/A';
+                        cell2.textContent = result.traversedVariables[0];
+                    });
+                } else {
+                    const noDataMessage = document.createElement('p');
+                    noDataMessage.textContent = 'Aucune donnée disponible pour ce contrat.';
+                    contractDiv.appendChild(noDataMessage);
+                }
+
+                contractDiv.appendChild(table);
+
+                resultContainer.appendChild(contractDiv);
+            });
         };
 
     </script>

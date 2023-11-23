@@ -183,7 +183,24 @@ class ApiController extends AbstractController
     public function evaluateSalary(Request $request, int $salary): JsonResponse
     {
         try {
-            $result = $this->urssafApi->evaluateSalary($salary);
+            $result = [
+                [
+                    "contract" => "CDI",
+                    "data" => $this->urssafApi->evaluateOpenEndedContracts($salary),
+                ],
+                [
+                    "contract" => "Stage",
+                    "data" => $this->urssafApi->evaluateInternship(),
+                ],
+                [
+                    "contract" => "Alternance",
+                    "data" => $this->urssafApi->evaluateWorkStudy($salary),
+                ],
+                [
+                    "contract" => "CDD",
+                    "data" => $this->urssafApi->evaluateFixedTermContract($salary),
+                ],
+            ];
         } catch (\Exception $e) {
             return $this->handleException($e);
         }
